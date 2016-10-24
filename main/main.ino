@@ -41,17 +41,38 @@ void setup() {
 
   while(!Serial) {
   }
+  Serial.print("Serial init success\n");
 
+  init();
+
+}
+
+void loop() {
+  //////////////////////////////////////
+  // set up sensors and file
+  log_file = SD.open("log.txt", FILE_WRITE);
+  // wake up mcp9808
+  mcp9808.shutdown_wake(0);
+  //////////////////////////////////////
+
+
+
+  //////////////////////////////////////
+  // clean up
+  mcp9808.shutdown_wake(0);
+  log_file.close();
+  //////////////////////////////////////
+}
+
+void init() {
   //////////////////////////////////////
   // Setup SD Card
   Serial.print("Initialization: ");
 
   if (!SD.begin(CS_0)) {
-    Serial.print("FAIL\n");
+    Serial.print("SD card initilization fail\n");
     return ;
   }
-
-  Serial.print("SUCCESS\n");
 
   //////////////////////////////////////
   // Setup BME280
@@ -85,21 +106,5 @@ void setup() {
     }
   }
 
-}
-
-void loop() {
-  //////////////////////////////////////
-  // set up sensors and file
-  log_file = SD.open("log.txt", FILE_WRITE);
-  // wake up mcp9808
-  mcp9808.shutdown_wake(0);
-  //////////////////////////////////////
-
-
-
-  //////////////////////////////////////
-  // clean up
-  mcp9808.shutdown_wake(0);
-  log_file.close();
-  //////////////////////////////////////
+  Serial.println("Initilization success");
 }
