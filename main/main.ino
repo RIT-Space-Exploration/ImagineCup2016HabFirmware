@@ -12,6 +12,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Wire.h>
+#include <elapsedMillis.h>
 
 #include "SparkFunBME280.h"
 #include <SparkFunLSM9DS1.h>
@@ -34,6 +35,9 @@ File log_file;
 BME280 bme280;
 LSM9DS1 imu;
 Adafruit_MCP9808 mcp9808 = Adafruit_MCP9808();
+elapsedMillis poll_elapsed;
+
+uint16_t poll_rate = 500; // in milliseconds
 
 
 void setup() {
@@ -48,20 +52,13 @@ void setup() {
 }
 
 void loop() {
-  //////////////////////////////////////
-  // set up sensors and file
-  log_file = SD.open("log.txt", FILE_WRITE);
-  // wake up mcp9808
-  mcp9808.shutdown_wake(0);
-  //////////////////////////////////////
+  Serial.println("======");
 
-
-
-  //////////////////////////////////////
-  // clean up
-  mcp9808.shutdown_wake(0);
-  log_file.close();
-  //////////////////////////////////////
+  Serial.println("======");
+  if (poll_elapsed > poll_rate ) {
+    poll_sensors();
+    poll_elapsed = 0;
+  }
 }
 
 void init() {
@@ -107,4 +104,8 @@ void init() {
   }
 
   Serial.println("Initilization success");
+}
+
+void poll_sensor() {
+
 }
