@@ -19,8 +19,9 @@
 #include "Adafruit_MCP9808.h"
 
 #define B_RATE     9600 // Serial baud rate
-#define BUFF_SIZE  512  // TODO tailor to packet size
-#define CS_0       10 // CS0 pin for SPI
+#define BUFF_SIZE  480  // TODO tailor to packet size
+#define PACK_LIM   8    
+#define CS_0       10   // CS0 pin for SPI
 
 // Magnetic field declination, RIT Nov, 21, 2016
 // TODO confirm format of declination
@@ -36,11 +37,13 @@ File log_file;
 BME280 bme280;
 LSM9DS1 imu;
 Adafruit_MCP9808 mcp9808 = Adafruit_MCP9808();
-elapsedMillis poll_elapsed;
+elapsedMillis poll_elapsed, since_init;
 
 uint16_t poll_rate = 500; // in milliseconds
 uint8_t buffer[BUFF_SIZE];
 uint8_t *cursor = buffer;
+uint8_t packet_count = 0;
+uint8_t total_count = 0;
 
 
 void setup() {
@@ -55,20 +58,22 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("======");
-  float a;
-  Serial.println(sizeof(bme280.readTempC()));
-  Serial.println(sizeof(bme280.readFloatPressure()));
-  Serial.println(sizeof(a));
-  Serial.println("======");
-
-  for(;;) {
-
+  // TESTING
+  if(total_count >= 25) {
+    Serial.println("finished");
+    for(;;){}
   }
+  if(packet_count == PACK_LIM) {
+    write_buffer();
+  }
+  
   if (poll_elapsed > poll_rate ) {
+    Serial.println("Polled");
+    Serial.println(poll_elapsed);
     poll_sensors();
     poll_elapsed = 0;
   }
+
 }
 
 void init() {
@@ -79,6 +84,13 @@ void init() {
   if (!SD.begin(CS_0)) {
     Serial.print("SD card initilization fail\n");
     return ;
+  }
+
+  log_file = SD.open("tester.bin", FILE_WRITE);
+
+  if(!log_file) {
+    Serial.println("File failed to open");
+    for(;;){}
   }
 
   //////////////////////////////////////
@@ -95,8 +107,7 @@ void init() {
   if(!bme280.begin()) {
     Serial.println("BME280 failed to initiate");
 
-    for( ;; ){
-    }
+    for(;;){}
   }
 
   //////////////////////////////////////
@@ -125,9 +136,12 @@ void init() {
 }
 
 void poll_sensors() {
+  buffer_float(since_init);
   poll_bme280();
   poll_imu();
+  poll_mcp();
 
+  packet_count++;
 }
 
 void poll_bme280() {
@@ -164,10 +178,28 @@ void poll_imu() {
 
 }
 
+void poll_mcp() {
+  mcp9808.shutdown_wake(0);
+
+  buffer_float(mcp9808.readTempC());
+
+  mcp9808.shutdown_wake(1);
+}
+
 void buffer_float(float in){
-  cursor[0] = (in >> 24) & 0xFF;
-  cursor[1] = (in >> 16) & 0xFF;
-  cursor[2] = (in >> 8)  & 0xFF;
-  cursor[3] = in         & 0xFF;
+  memcpy(cursor, &in, sizeof(float));
   cursor = cursor + 4;
+}
+
+void write_buffer(){
+  if(log_file) {
+    log_file.write(buffer, BUFF_SIZE);
+    Serial.println("Success");
+  } else {
+    Serial.println("Error opening log_file");
+  }
+
+  Serial.println("Beep");
+  packet_count = 0;
+  log_file.flush();
 }
