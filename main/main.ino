@@ -19,6 +19,7 @@
 #include "Adafruit_MCP9808.h"
 
 #define B_RATE     9600 // Serial baud rate
+#define BUFF_SIZE  462
 #define CS_0       10 // CS0 pin for SPI
 
 // Magnetic field declination, RIT Nov, 21, 2016
@@ -38,6 +39,7 @@ Adafruit_MCP9808 mcp9808 = Adafruit_MCP9808();
 elapsedMillis poll_elapsed;
 
 uint16_t poll_rate = 500; // in milliseconds
+uint8_t buffer[BUFF_SIZE];
 
 
 void setup() {
