@@ -39,11 +39,10 @@ LSM9DS1 imu;
 Adafruit_MCP9808 mcp9808 = Adafruit_MCP9808();
 elapsedMillis poll_elapsed, since_init;
 
-uint16_t poll_rate = 500; // in milliseconds
+uint16_t poll_rate = 100; // in milliseconds
 uint8_t buffer[BUFF_SIZE];
 uint8_t *cursor = buffer;
 uint8_t packet_count = 0;
-uint8_t total_count = 0;
 
 
 void setup() {
@@ -58,18 +57,11 @@ void setup() {
 }
 
 void loop() {
-  // TESTING
-  if(total_count >= 25) {
-    Serial.println("finished");
-    for(;;){}
-  }
   if(packet_count == PACK_LIM) {
     write_buffer();
   }
   
   if (poll_elapsed > poll_rate ) {
-    Serial.println("Polled");
-    Serial.println(poll_elapsed);
     poll_sensors();
     poll_elapsed = 0;
   }
@@ -194,12 +186,11 @@ void buffer_float(float in){
 void write_buffer(){
   if(log_file) {
     log_file.write(buffer, BUFF_SIZE);
-    Serial.println("Success");
   } else {
     Serial.println("Error opening log_file");
   }
 
-  Serial.println("Beep");
+  cursor = buffer;
   packet_count = 0;
   log_file.flush();
 }
