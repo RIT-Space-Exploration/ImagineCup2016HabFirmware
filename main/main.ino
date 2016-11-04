@@ -46,11 +46,16 @@ uint8_t packet_count = 0;
 
 
 void setup() {
-  Serial.begin(B_RATE);
+  // Serial.begin(B_RATE);
+  // while(!Serial) {
+  // }
+  //Serial.print("Serial init success\n");
 
-  while(!Serial) {
-  }
-  Serial.print("Serial init success\n");
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
+  delay(1000);
+  digitalWrite(13, LOW);
+
 
   init();
 
@@ -71,18 +76,20 @@ void loop() {
 void init() {
   //////////////////////////////////////
   // Setup SD Card
-  Serial.print("Initialization: ");
+  // Serial.print("Initialization: ");
 
   if (!SD.begin(CS_0)) {
     Serial.print("SD card initilization fail\n");
-    return ;
+    for(;;) {
+    }
   }
 
   log_file = SD.open("tester.bin", FILE_WRITE);
 
   if(!log_file) {
     Serial.println("File failed to open");
-    for(;;){}
+    for(;;){
+    }
   }
 
   //////////////////////////////////////
@@ -91,15 +98,18 @@ void init() {
   bme280.settings.I2CAddress      = 0x77;
   bme280.settings.runMode         = 3;
   bme280.settings.tStandby        = 0;
-  bme280.settings.filter          = 0;
+  bme280.settings.filter          = 4;
   bme280.settings.tempOverSample  = 1;
   bme280.settings.humidOverSample = 1;
+  bme280.settings.pressOverSample = 5;
   delay(10);
 
   if(!bme280.begin()) {
     Serial.println("BME280 failed to initiate");
 
-    for(;;){}
+    for(;;){
+
+    }
   }
 
   //////////////////////////////////////
@@ -141,6 +151,13 @@ void poll_bme280() {
   float pressure = bme280.readFloatPressure();
   float alt_m    = bme280.readFloatAltitudeMeters();
   float humidity = bme280.readFloatHumidity();
+
+  Serial.println("PRINT");
+  Serial.println(temp_c);
+  Serial.println(pressure);
+  Serial.println(alt_m);
+  Serial.println(humidity);
+  Serial.println();
 
   buffer_float(temp_c);
   buffer_float(pressure);
