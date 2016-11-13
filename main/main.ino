@@ -19,7 +19,7 @@
 #include "Adafruit_MCP9808.h"
 
 #define B_RATE     9600 // Serial baud rate
-#define BUFF_SIZE  480  // TODO tailor to packet size
+#define BUFF_SIZE  60   // TODO tailor to packet size
 #define PACK_LIM   8    
 #define CS_0       10   // CS0 pin for SPI
 
@@ -46,10 +46,10 @@ uint8_t packet_count = 0;
 
 
 void setup() {
-  // Serial.begin(B_RATE);
-  // while(!Serial) {
-  // }
-  //Serial.print("Serial init success\n");
+  //Serial.begin(Serial.baud());
+  Serial.begin(9600);
+  while(!Serial) {}
+  Serial.print("Serial init success\n");
 
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);
@@ -62,10 +62,6 @@ void setup() {
 }
 
 void loop() {
-  if(packet_count == PACK_LIM) {
-    write_buffer();
-  }
-  
   if (poll_elapsed > poll_rate ) {
     poll_sensors();
     poll_elapsed = 0;
@@ -143,7 +139,11 @@ void poll_sensors() {
   poll_imu();
   poll_mcp();
 
-  packet_count++;
+  Serial.write(buffer, sizeof(buffer));
+  Serial.write(0xdd);
+  Serial.write(0xdd);
+  Serial.write(0xdd);
+  cursor = buffer;
 }
 
 void poll_bme280() {
@@ -152,12 +152,12 @@ void poll_bme280() {
   float alt_m    = bme280.readFloatAltitudeMeters();
   float humidity = bme280.readFloatHumidity();
 
-  Serial.println("PRINT");
-  Serial.println(temp_c);
-  Serial.println(pressure);
-  Serial.println(alt_m);
-  Serial.println(humidity);
-  Serial.println();
+  //Serial.println("PRINT");
+  //Serial.println(temp_c);
+  //Serial.println(pressure);
+  //Serial.println(alt_m);
+  //Serial.println(humidity);
+  //Serial.println();
 
   buffer_float(temp_c);
   buffer_float(pressure);
